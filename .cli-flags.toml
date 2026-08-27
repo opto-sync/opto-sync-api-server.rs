@@ -1,17 +1,24 @@
-# flags-2-env surface for `opto-sync-api`
-[flags.config]
-env = "OPTO_SYNC_CONFIG"
-long = "config"
-help = "Path to TOML configuration"
+[help]
+url = "https://github.com/opto-sync/opto-sync-api-server.rs"
 
-[flags.api_base]
-env = "OPTO_SYNC_API_BASE"
-long = "api-base"
-help = "API HTTP base URL"
+[parse]
+allow_unknown = false
 
-[flags.json]
-env = "OPTO_SYNC_JSON"
-long = "json"
-switch = true
-help = "Emit JSON"
+[flags.bind]
+env = "OPTO_SYNC_API_BIND"
+aliases = ["bind"]
+type = "string"
+default = "127.0.0.1:8080"
+help = "HTTP bind address."
 
+[flags.tcp-bind]
+env = "OPTO_SYNC_API_TCP_BIND"
+aliases = ["tcp-bind"]
+type = "string"
+help = "Optional stateful TCP bind address."
+
+[flags.nats-url]
+env = "OPTO_SYNC_NATS_URL"
+aliases = ["nats-url"]
+type = "string"
+help = "Optional NATS URL."
