@@ -12,15 +12,16 @@ pub struct ApiConfig {
 impl ApiConfig {
     pub fn from_env_map(env: &EnvMap) -> Self {
         Self {
-            bind: value(env, "OPTO_SYNC_API_BIND")
+            bind: value(env, crate::env::BIND)
                 .unwrap_or("127.0.0.1:8080")
                 .to_owned(),
-            tcp_bind: value(env, "OPTO_SYNC_API_TCP_BIND").map(str::to_owned),
-            nats_url: value(env, "OPTO_SYNC_NATS_URL").map(str::to_owned),
+            tcp_bind: value(env, crate::env::TCP_BIND).map(str::to_owned),
+            nats_url: value(env, crate::env::NATS_URL).map(str::to_owned),
         }
     }
 
     pub fn from_env() -> Self {
-        Self::from_env_map(&std::env::vars().collect())
+        let env = crate::env::load().unwrap_or_else(|err| panic!("{err}"));
+        Self::from_env_map(&env)
     }
 }
