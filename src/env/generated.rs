@@ -37,7 +37,9 @@ pub struct CliEnvValues {
 /// Pure: resolve values from an explicit lookup.
 pub fn load_from(lookup: impl Fn(&str) -> Option<String>) -> CliEnvValues {
     CliEnvValues {
-        bind: lookup("OPTO_SYNC_API_BIND").filter(|value| !value.is_empty()).unwrap_or_else(|| "127.0.0.1:8080".to_string()),
+        bind: lookup("OPTO_SYNC_API_BIND")
+            .filter(|value| !value.is_empty())
+            .unwrap_or_else(|| "127.0.0.1:8080".to_string()),
         nats_url: lookup("OPTO_SYNC_NATS_URL").filter(|value| !value.is_empty()),
         tcp_bind: lookup("OPTO_SYNC_API_TCP_BIND").filter(|value| !value.is_empty()),
     }
@@ -73,14 +75,22 @@ pub struct MissingEnv {
 
 impl std::fmt::Display for MissingEnv {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "missing required environment variable {}\n  expected type: {}\n  examples: {}", self.name, self.expected_type, self.examples.join(", "))
+        write!(
+            f,
+            "missing required environment variable {}\n  expected type: {}\n  examples: {}",
+            self.name,
+            self.expected_type,
+            self.examples.join(", ")
+        )
     }
 }
 
 impl std::error::Error for MissingEnv {}
 
 fn nonempty(raw: Option<&str>) -> Option<String> {
-    raw.map(str::trim).filter(|value| !value.is_empty()).map(str::to_string)
+    raw.map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_string)
 }
 
 fn require_env(
@@ -160,22 +170,24 @@ fn parse_dotenv(text: &str) -> std::collections::BTreeMap<String, String> {
 }
 
 fn dotenv_enabled() -> bool {
-    match std::env::var("FLAGS2ENV_DOTENV") {
-        Ok(value) if matches!(value.trim(), "0" | "false" | "FALSE" | "no" | "NO") => false,
-        _ => true,
-    }
+    !matches!(
+        std::env::var("FLAGS2ENV_DOTENV"),
+        Ok(value) if matches!(value.trim(), "0" | "false" | "FALSE" | "no" | "NO")
+    )
 }
 
 fn load_dotenv_files(files: &[&str]) -> std::collections::BTreeMap<String, String> {
     if !dotenv_enabled() {
         return std::collections::BTreeMap::new();
     }
-    files.iter().fold(std::collections::BTreeMap::new(), |mut acc, path| {
-        if let Ok(text) = std::fs::read_to_string(path) {
-            acc.extend(parse_dotenv(&text));
-        }
-        acc
-    })
+    files
+        .iter()
+        .fold(std::collections::BTreeMap::new(), |mut acc, path| {
+            if let Ok(text) = std::fs::read_to_string(path) {
+                acc.extend(parse_dotenv(&text));
+            }
+            acc
+        })
 }
 
 fn shell_env() -> std::collections::BTreeMap<String, String> {
@@ -189,15 +201,36 @@ pub fn load_env_map(
     flags: &std::collections::BTreeMap<String, String>,
 ) -> Result<std::collections::BTreeMap<String, String>, MissingEnv> {
     let mut out = std::collections::BTreeMap::new();
-    let bind = pick(&["OPTO_SYNC_API_BIND"], &["flags", "env_shell", "env_file"], shell, dotenv, flags, Some("127.0.0.1:8080"));
+    let bind = pick(
+        &["OPTO_SYNC_API_BIND"],
+        &["flags", "env_shell", "env_file"],
+        shell,
+        dotenv,
+        flags,
+        Some("127.0.0.1:8080"),
+    );
     if let Some(value) = bind {
         out.insert("OPTO_SYNC_API_BIND".to_string(), value);
     }
-    let nats_url = pick(&["OPTO_SYNC_NATS_URL"], &["flags", "env_shell", "env_file"], shell, dotenv, flags, None);
+    let nats_url = pick(
+        &["OPTO_SYNC_NATS_URL"],
+        &["flags", "env_shell", "env_file"],
+        shell,
+        dotenv,
+        flags,
+        None,
+    );
     if let Some(value) = nats_url {
         out.insert("OPTO_SYNC_NATS_URL".to_string(), value);
     }
-    let tcp_bind = pick(&["OPTO_SYNC_API_TCP_BIND"], &["flags", "env_shell", "env_file"], shell, dotenv, flags, None);
+    let tcp_bind = pick(
+        &["OPTO_SYNC_API_TCP_BIND"],
+        &["flags", "env_shell", "env_file"],
+        shell,
+        dotenv,
+        flags,
+        None,
+    );
     if let Some(value) = tcp_bind {
         out.insert("OPTO_SYNC_API_TCP_BIND".to_string(), value);
     }
@@ -206,5 +239,9 @@ pub fn load_env_map(
 
 /// Effectful overlay: `.env` files then the process environment, ranked per key.
 pub fn load_env_map_from_os() -> Result<std::collections::BTreeMap<String, String>, MissingEnv> {
-    load_env_map(&shell_env(), &load_dotenv_files(&[]), &std::collections::BTreeMap::new())
+    load_env_map(
+        &shell_env(),
+        &load_dotenv_files(&[]),
+        &std::collections::BTreeMap::new(),
+    )
 }
