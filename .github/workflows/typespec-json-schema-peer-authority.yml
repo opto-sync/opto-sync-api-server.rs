@@ -80,6 +80,7 @@ jobs:
         with:
           typespec: .deps/opto-sync-interfaces/validation/typespec/validation.tsp
           schema: .deps/opto-sync-interfaces/validation/public-contracts.v1.json
+          mapping: .deps/opto-sync-interfaces/validation/typespec/tjsv-mapping.json
           instances: .deps/opto-sync-interfaces/validation/tjsv-instances
           report: .typespec-json-schema-validator/report.json
           sarif: .typespec-json-schema-validator/report.sarif
