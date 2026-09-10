@@ -9,7 +9,7 @@
   "evidenceScope": "pinned-upstream-public-contracts",
   "validator": {
     "repository": "ORESoftware/typespec-json-schema-validator",
-    "actionCommit": "4740f1367a7906813dcd420a77d0c9ede26943fb",
+    "actionCommit": "4a5d049218adc2740d4cf78f612caf7f38f6f64c",
     "contractIrSchema": "ores.typespec-json-schema-validator.contract-ir/v1",
     "consumerVerificationSchema": "ores.typespec-json-schema-validator.consumer-verification-receipt/v1",
     "consumerAdmissionNegativeCases": 19
