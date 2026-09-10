@@ -5,7 +5,7 @@
   "repository": "opto-sync/opto-sync-api-server.rs",
   "repositoryRole": "api-server",
   "canonicalAuthorityRepository": "opto-sync/opto-sync-interfaces",
-  "canonicalAuthorityCommit": "71d856aa90d8a29cddabddc6557e051ab0336d71",
+  "canonicalAuthorityCommit": "cc9d30ac6365dceb90e1abddd0066e5a16076573",
   "evidenceScope": "pinned-upstream-public-contracts",
   "validator": {
     "repository": "ORESoftware/typespec-json-schema-validator",
