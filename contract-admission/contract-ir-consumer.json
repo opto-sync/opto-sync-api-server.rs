@@ -5,11 +5,14 @@
   "repository": "opto-sync/opto-sync-api-server.rs",
   "repositoryRole": "api-server",
   "canonicalAuthorityRepository": "opto-sync/opto-sync-interfaces",
-  "evidenceScope": "repository-local-canary-only",
+  "canonicalAuthorityCommit": "cc9d30ac6365dceb90e1abddd0066e5a16076573",
+  "evidenceScope": "pinned-upstream-public-contracts",
   "validator": {
     "repository": "ORESoftware/typespec-json-schema-validator",
-    "actionCommit": "c745036456dd80408b83217118b8563edb8f6abd",
-    "contractIrSchema": "ores.typespec-json-schema-validator.contract-ir/v1"
+    "actionCommit": "4a5d049218adc2740d4cf78f612caf7f38f6f64c",
+    "contractIrSchema": "ores.typespec-json-schema-validator.contract-ir/v1",
+    "consumerVerificationSchema": "ores.typespec-json-schema-validator.consumer-verification-receipt/v1",
+    "consumerAdmissionNegativeCases": 19
   },
   "authorityModel": {
     "typespec": "independently-authored-peer-authority",
@@ -21,6 +24,8 @@
     "requirePassedReceipt": true,
     "requireAdmissibleContractIr": true,
     "requireZeroUnexplainedFindings": true,
+    "requireExactSourceFileClosure": true,
+    "requireDenseCompleteConsumerScope": true,
     "rejectEditableAuthority": true,
     "allowFallbackAuthority": false
   },

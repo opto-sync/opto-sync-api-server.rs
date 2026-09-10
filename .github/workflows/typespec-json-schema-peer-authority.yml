@@ -3,13 +3,11 @@ name: TypeSpec and JSON Schema Contract IR admission
 on:
   pull_request:
     paths:
-      - "test/fixtures/schema-authority-canary/**"
       - "contract-admission/contract-ir-consumer.json"
       - ".github/workflows/typespec-json-schema-peer-authority.yml"
   push:
     branches: [main, dev]
     paths:
-      - "test/fixtures/schema-authority-canary/**"
       - "contract-admission/contract-ir-consumer.json"
       - ".github/workflows/typespec-json-schema-peer-authority.yml"
   schedule:
@@ -23,27 +21,39 @@ concurrency:
   group: contract-ir-admission-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  TSJSV_COMMIT: 4a5d049218adc2740d4cf78f612caf7f38f6f64c
+  INTERFACES_COMMIT: cc9d30ac6365dceb90e1abddd0066e5a16076573
+
 jobs:
   admission:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
-      - name: Check out exact head
+      - name: Check out exact API-server head
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
-      - name: Verify checked-out revision
+      - name: Verify checked-out API-server revision
         shell: bash
         env:
           EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
-      - name: Verify API-server consumer policy
+      - name: Check out pinned canonical interfaces authority
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: opto-sync/opto-sync-interfaces
+          ref: ${{ env.INTERFACES_COMMIT }}
+          path: .deps/opto-sync-interfaces
+          persist-credentials: false
+      - name: Verify API consumer policy and pinned authority revision
         shell: bash
         run: |
           set -euo pipefail
+          test "$(git -C .deps/opto-sync-interfaces rev-parse HEAD)" = "$INTERFACES_COMMIT"
           node --input-type=module <<'NODE'
           import assert from "node:assert/strict";
           import { readFileSync } from "node:fs";
@@ -52,41 +62,49 @@ jobs:
           assert.equal(manifest.repository, process.env.GITHUB_REPOSITORY);
           assert.equal(manifest.repositoryRole, "api-server");
           assert.equal(manifest.canonicalAuthorityRepository, "opto-sync/opto-sync-interfaces");
-          assert.equal(manifest.evidenceScope, "repository-local-canary-only");
+          assert.equal(manifest.canonicalAuthorityCommit, process.env.INTERFACES_COMMIT);
+          assert.equal(manifest.evidenceScope, "pinned-upstream-public-contracts");
           assert.equal(manifest.validator.repository, "ORESoftware/typespec-json-schema-validator");
-          assert.equal(manifest.validator.actionCommit, "c745036456dd80408b83217118b8563edb8f6abd");
+          assert.equal(manifest.validator.actionCommit, process.env.TSJSV_COMMIT);
           assert.equal(manifest.validator.contractIrSchema, "ores.typespec-json-schema-validator.contract-ir/v1");
+          assert.equal(manifest.validator.consumerVerificationSchema, "ores.typespec-json-schema-validator.consumer-verification-receipt/v1");
+          assert.equal(manifest.validator.consumerAdmissionNegativeCases, 19);
           assert.equal(manifest.authorityModel.precedence, "none");
+          assert.equal(manifest.admission.requireExactSourceFileClosure, true);
+          assert.equal(manifest.admission.requireDenseCompleteConsumerScope, true);
           assert.equal(manifest.admission.allowFallbackAuthority, false);
           assert.ok(manifest.downstreamResponsibilities.includes("preserve-offline-and-conflict-semantics"));
           NODE
-      - name: Compare peer authorities and emit fresh Contract IR
-        uses: ORESoftware/typespec-json-schema-validator@c745036456dd80408b83217118b8563edb8f6abd
+      - name: Compare canonical production peer authorities and emit fresh Contract IR
+        uses: ORESoftware/typespec-json-schema-validator@4a5d049218adc2740d4cf78f612caf7f38f6f64c
         with:
-          typespec: test/fixtures/schema-authority-canary/main.tsp
-          schema: test/fixtures/schema-authority-canary/authored.schema.json
+          typespec: .deps/opto-sync-interfaces/validation/typespec/validation.tsp
+          schema: .deps/opto-sync-interfaces/validation/public-contracts.v1.json
+          mapping: .deps/opto-sync-interfaces/validation/typespec/tjsv-mapping.json
+          instances: .deps/opto-sync-interfaces/validation/tjsv-instances
           report: .typespec-json-schema-validator/report.json
           sarif: .typespec-json-schema-validator/report.sarif
           contract_ir: .typespec-json-schema-validator/contract-ir.json
           output_dir: .typespec-json-schema-validator/generated
-          max_probes: "64"
-      - name: Verify current inputs, retained receipt, IR identity and complete scope
-        uses: ORESoftware/typespec-json-schema-validator/actions/verify-contract-ir@c745036456dd80408b83217118b8563edb8f6abd
+          max_probes: "96"
+      - name: Require complete production admission and nineteen canonical refusals
+        uses: ORESoftware/typespec-json-schema-validator/actions/test-consumer-admission@4a5d049218adc2740d4cf78f612caf7f38f6f64c
         with:
           contract_ir: .typespec-json-schema-validator/contract-ir.json
           report: .typespec-json-schema-validator/report.json
-          typespec: test/fixtures/schema-authority-canary/main.tsp
-          schema: test/fixtures/schema-authority-canary/authored.schema.json
+          typespec: .deps/opto-sync-interfaces/validation/typespec/validation.tsp
+          schema: .deps/opto-sync-interfaces/validation/public-contracts.v1.json
           generated_schema: .typespec-json-schema-validator/generated/typespec.generated.schema.json
-          expected_declarations: '["OreSchemaAuthority.AuthorityKind","OreSchemaAuthority.PeerAuthorityRegistration"]'
-      - name: Verify authored authorities were not modified
+          expected_declarations: '["OptoSync.Validation.PageQuery","OptoSync.Validation.ProblemDetails","OptoSync.Validation.PublicValidationContract","OptoSync.Validation.RequestMeta"]'
+          verification: .typespec-json-schema-validator/consumer-verification.json
+      - name: Preserve pinned canonical authorities
         shell: bash
-        run: git diff --exit-code -- test/fixtures/schema-authority-canary/
-      - name: Retain diagnostic receipt, IR, SARIF and comparison witness
+        run: git -C .deps/opto-sync-interfaces diff --exit-code -- validation/
+      - name: Retain diagnostic receipt, IR, SARIF, witness, and admission evidence
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: contract-ir-admission-${{ github.event.repository.name }}-${{ github.run_id }}
+          name: production-contract-admission-${{ github.event.repository.name }}-${{ github.run_id }}
           path: .typespec-json-schema-validator/
           include-hidden-files: true
           if-no-files-found: error
