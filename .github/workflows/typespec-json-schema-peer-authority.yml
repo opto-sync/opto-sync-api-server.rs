@@ -23,7 +23,7 @@ concurrency:
 
 env:
   TSJSV_COMMIT: 4a5d049218adc2740d4cf78f612caf7f38f6f64c
-  INTERFACES_COMMIT: 71d856aa90d8a29cddabddc6557e051ab0336d71
+  INTERFACES_COMMIT: cc9d30ac6365dceb90e1abddd0066e5a16076573
 
 jobs:
   admission:
@@ -95,7 +95,7 @@ jobs:
           typespec: .deps/opto-sync-interfaces/validation/typespec/validation.tsp
           schema: .deps/opto-sync-interfaces/validation/public-contracts.v1.json
           generated_schema: .typespec-json-schema-validator/generated/typespec.generated.schema.json
-          expected_declarations: '["OptoSync.Validation.PageQuery","OptoSync.Validation.ProblemDetails","OptoSync.Validation.RequestMeta"]'
+          expected_declarations: '["OptoSync.Validation.PageQuery","OptoSync.Validation.ProblemDetails","OptoSync.Validation.PublicValidationContract","OptoSync.Validation.RequestMeta"]'
           verification: .typespec-json-schema-validator/consumer-verification.json
       - name: Preserve pinned canonical authorities
         shell: bash
