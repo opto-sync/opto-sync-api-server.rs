@@ -22,7 +22,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  TSJSV_COMMIT: 4740f1367a7906813dcd420a77d0c9ede26943fb
+  TSJSV_COMMIT: 4a5d049218adc2740d4cf78f612caf7f38f6f64c
   INTERFACES_COMMIT: 71d856aa90d8a29cddabddc6557e051ab0336d71
 
 jobs:
@@ -76,7 +76,7 @@ jobs:
           assert.ok(manifest.downstreamResponsibilities.includes("preserve-offline-and-conflict-semantics"));
           NODE
       - name: Compare canonical production peer authorities and emit fresh Contract IR
-        uses: ORESoftware/typespec-json-schema-validator@4740f1367a7906813dcd420a77d0c9ede26943fb
+        uses: ORESoftware/typespec-json-schema-validator@4a5d049218adc2740d4cf78f612caf7f38f6f64c
         with:
           typespec: .deps/opto-sync-interfaces/validation/typespec/validation.tsp
           schema: .deps/opto-sync-interfaces/validation/public-contracts.v1.json
@@ -87,7 +87,7 @@ jobs:
           output_dir: .typespec-json-schema-validator/generated
           max_probes: "96"
       - name: Require complete production admission and nineteen canonical refusals
-        uses: ORESoftware/typespec-json-schema-validator/actions/test-consumer-admission@4740f1367a7906813dcd420a77d0c9ede26943fb
+        uses: ORESoftware/typespec-json-schema-validator/actions/test-consumer-admission@4a5d049218adc2740d4cf78f612caf7f38f6f64c
         with:
           contract_ir: .typespec-json-schema-validator/contract-ir.json
           report: .typespec-json-schema-validator/report.json
