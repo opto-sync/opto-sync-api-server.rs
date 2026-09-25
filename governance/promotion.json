@@ -1,0 +1,10 @@
+{
+  "schema": "opto-sync.promotion-policy.v1",
+  "exact_head_required": true,
+  "stepful_execution_required": true,
+  "review_required": true,
+  "implemented_behavior_required_for_conformance_claim": true,
+  "contract_authority_repository": "opto-sync/opto-sync-interfaces",
+  "future_mutating_route_gates": ["authenticated-identity", "tenant-binding", "idempotency", "version-precondition"],
+  "disallowed_green_evidence": ["queued", "skipped", "zero-step", "stale-head", "billing-blocked", "admission-blocked", "missing-run", "historical-only"]
+}
